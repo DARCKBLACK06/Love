@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Fondo Personalizado ❤️</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>❤️</text></svg>">
+  <style>
+    /* RESET PARA MÓVIL */
+    * {
+      touch-action: manipulation;
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #000;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* MATRIX BACKGROUND */
+    #canvas {
+      display: block;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 0;
+    }
+
+    #counter {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      padding: 10px 15px;
+      border-radius: 20px;
+      font-size: 14px;
+      z-index: 10;
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* PANEL DE CONTROLES (SIEMPRE VISIBLE) */
+    #controls-panel {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      padding: 15px;
+      border-radius: 20px 20px 0 0;
+      z-index: 90;
+      backdrop-filter: blur(10px);
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    #controls-panel h3 {
+      color: #ff4d4d;
+      text-align: center;
+      margin-top: 0;
+      font-size: 1.2rem;
+    }
+
+    .control-group {
+      margin-bottom: 15px;
+    }
+
+    .control-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #fff;
+      font-size: 0.9rem;
+    }
+
+    /* BOTÓN DE SUBIR (OPTIMIZADO MÓVIL) */
+    .upload-btn {
+      display: block;
+      background: linear-gradient(135deg, #4d6bff, #4dc2ff);
+      color: white;
+      padding: 12px;
+      border-radius: 10px;
+      text-align: center;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .upload-btn:active {
+      transform: scale(0.98);
+    }
+
+    .hidden-upload {
+      display: none;
+    }
+
+    /* SLIDER PERSONALIZADO */
+    input[type="range"] {
+      width: 100%;
+      height: 8px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.2);
+      -webkit-appearance: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #ff4d4d;
+      cursor: pointer;
+    }
+
+    /* SELECTORES */
+    select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    /* BOTÓN DESCARGAR */
+    .download-btn {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #4dff4d, #4dffb8);
+      color: #000;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 1rem;
+      margin-top: 10px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .download-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* CONTENEDOR DE IMAGEN */
+    #image-container {
+      position: absolute;
+      width: 250px;
+      height: 350px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px dashed rgba(255, 255, 255, 0.2);
+      border-radius: 15px;
+      z-index: 20;
+      touch-action: none;
+      user-select: none;
+    }
+
+    #image-preview {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-radius: 13px;
+    }
+
+    #image-preview img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      transition: all 0.3s;
+    }
+
+    /* EFECTOS ESPECIALES */
+    .neon-soft {
+      filter: drop-shadow(0 0 5px currentColor);
+    }
+
+    .neon-medium {
+      filter: drop-shadow(0 0 10px currentColor) brightness(1.1);
+    }
+
+    .neon-strong {
+      filter: drop-shadow(0 0 15px currentColor) brightness(1.2);
+    }
+
+    /* MARCOS */
+    #frame-effect {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      border-radius: 13px;
+    }
+
+    .frame-heart {
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path fill="rgba(255,77,77,0.3)" d="M50 85L20 55Q10 45 10 30Q10 15 25 15Q35 15 50 30Q65 15 75 15Q90 15 90 30Q90 45 80 55Z"/></svg>');
+      background-size: 40px 40px;
+    }
+
+    .frame-sparkle {
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path fill="rgba(255,215,0,0.3)" d="M50 10L55 40L80 50L55 60L50 90L45 60L20 50L45 40Z"/></svg>');
+      background-size: 30px 30px;
+    }
+
+    .frame-polaroid {
+      background: white;
+      padding: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    .frame-polaroid::after {
+      content: "";
+      position: absolute;
+      bottom: 15px;
+      left: 50%;
+      width: 80%;
+      height: 2px;
+      background: #eee;
+      transform: translateX(-50%);
+    }
+
+    /* BOTÓN DE MÚSICA */
+    #music-btn {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      font-size: 20px;
+      z-index: 100;
+      backdrop-filter: blur(5px);
+    }
+
+    /* RESPONSIVE PARA PC */
+    @media (min-width: 768px) {
+      #controls-panel {
+        width: 300px;
+        top: 20px;
+        right: 20px;
+        bottom: auto;
+        left: auto;
+        border-radius: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <div id="counter">❤️ Días juntos: 0</div>
+  
+  <!-- Botón de música -->
+  <button id="music-btn">🎵</button>
+
+  <!-- Panel de controles -->
+  <div id="controls-panel">
+    <h3>🎨 Personaliza tu fondo</h3>
+    
+    <!-- Botón de subir foto -->
+    <div class="control-group">
+      <label class="upload-btn">
+        📸 Subir Foto
+        <input type="file" id="image-upload" accept="image/*" class="hidden-upload">
+      </label>
+    </div>
+    
+    <!-- Controles -->
+    <div class="control-group">
+      <label for="size-slider">🔍 Tamaño: <span id="size-value">100%</span></label>
+      <input type="range" id="size-slider" min="20" max="200" value="100">
+    </div>
+    
+    <div class="control-group">
+      <label for="color-picker">🎨 Color texto:</label>
+      <input type="color" id="color-picker" value="#ff4d4d">
+    </div>
+    
+    <div class="control-group">
+      <label for="neon-effect">✨ Efecto:</label>
+      <select id="neon-effect">
+        <option value="none">Ninguno</option>
+        <option value="soft">Suave</option>
+        <option value="medium" selected>Medio</option>
+        <option value="strong">Fuerte</option>
+      </select>
+    </div>
+    
+    <div class="control-group">
+      <label for="frame-select">🖼️ Marco:</label>
+      <select id="frame-select">
+        <option value="none">Ninguno</option>
+        <option value="heart">❤️ Corazones</option>
+        <option value="sparkle">⭐ Estrellas</option>
+        <option value="polaroid">📸 Polaroid</option>
+      </select>
+    </div>
+    
+    <button id="download-btn" class="download-btn">💾 Descargar Fondo</button>
+  </div>
+  
+  <!-- Contenedor de imagen -->
+  <div id="image-container">
+    <div id="image-preview"></div>
+    <div id="frame-effect"></div>
+  </div>
+
+  <!-- Audio -->
+  <audio id="bg-music" loop>
+    <source src="luna.mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    // ===== MATRIX RAIN =====
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    // Ajustar tamaño inicial
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+
+    // Colores neón personalizables
+    let colors = ['#ff4d4d', '#4dff4d', '#4dd2ff', '#ffd24d', '#ff4de8', '#7d4dff'];
+
+    const fontSize = 20;
+    const maxParticles = 300;
+    let particles = [];
+
+    // Crear partículas
+    function createParticle() {
+      return {
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vy: 3 + Math.random() * 4,
+        text: ["Te amo", "❤️", "Love", "Je t'aime", "愛してる"][Math.floor(Math.random() * 5)],
+        color: colors[Math.floor(Math.random() * colors.length)],
+        vx: 0,
+        vyExtra: 0
+      };
+    }
+
+    // Inicializar partículas
+    for (let i = 0; i < maxParticles; i++) {
+      particles.push(createParticle());
+    }
+
+    // Dibujar matrix
+    function drawMatrix() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.font = `${fontSize}px monospace`;
+
+      particles.forEach(p => {
+        ctx.fillStyle = p.color;
+        ctx.fillText(p.text, p.x, p.y);
+
+        p.y += p.vy;
+
+        if (p.vx || p.vyExtra) {
+          p.x += p.vx;
+          p.y += p.vyExtra;
+          p.vx *= 0.9;
+          p.vyExtra *= 0.9;
+        }
+
+        if (p.y > canvas.height + 50) {
+          Object.assign(p, createParticle());
+          p.y = -20;
+        }
+      });
+    }
+
+    // Efecto al tocar
+    canvas.addEventListener("click", (e) => {
+      const clickX = e.clientX;
+      const clickY = e.clientY;
+
+      particles.forEach(p => {
+        const dx = p.x - clickX;
+        const dy = p.y - clickY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < 150) {
+          const force = (1 - dist / 150) * 8;
+          const angle = Math.atan2(dy, dx);
+          p.vx = Math.cos(angle) * force * 5;
+          p.vyExtra = Math.sin(angle) * force * 5;
+        }
+      });
+    });
+
+    // Animación
+    setInterval(drawMatrix, 33);
+
+    // ===== CONTADOR DE DÍAS =====
+    const startDate = new Date("2024-06-07");
+    const counter = document.getElementById("counter");
+
+    function updateCounter() {
+      const today = new Date();
+      const days = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+      counter.textContent = `❤️ Días juntos: ${days}`;
+    }
+    setInterval(updateCounter, 1000);
+    updateCounter();
+
+    // ===== FUNCIONALIDADES DE IMAGEN =====
+    let currentImage = null;
+    let isDragging = false;
+    let startX, startY, initialX, initialY;
+
+    // Elementos del DOM
+    const imageContainer = document.getElementById("image-container");
+    const imageUpload = document.getElementById("image-upload");
+    const imagePreview = document.getElementById("image-preview");
+    const downloadBtn = document.getElementById("download-btn");
+    const sizeSlider = document.getElementById("size-slider");
+    const sizeValue = document.getElementById("size-value");
+    const colorPicker = document.getElementById("color-picker");
+    const neonEffectSelect = document.getElementById("neon-effect");
+    const frameSelect = document.getElementById("frame-select");
+    const frameEffect = document.getElementById("frame-effect");
+
+    // Subir imagen
+    imageUpload.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          currentImage = new Image();
+          currentImage.src = event.target.result;
+          currentImage.onload = updateImageDisplay;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Actualizar imagen
+    function updateImageDisplay() {
+      imagePreview.innerHTML = '';
+      if (currentImage) {
+        const img = document.createElement("img");
+        img.src = currentImage.src;
+        img.style.width = `${sizeSlider.value}%`;
+        img.classList.add(`neon-${neonEffectSelect.value}`);
+        imagePreview.appendChild(img);
+        
+        // Marco
+        frameEffect.className = '';
+        if (frameSelect.value !== 'none') {
+          frameEffect.classList.add(`frame-${frameSelect.value}`);
+        }
+      }
+    }
+
+    // Controles
+    sizeSlider.addEventListener("input", () => {
+      sizeValue.textContent = `${sizeSlider.value}%`;
+      const img = imagePreview.querySelector("img");
+      if (img) img.style.width = `${sizeSlider.value}%`;
+    });
+
+    colorPicker.addEventListener("input", () => {
+      colors[0] = colorPicker.value;
+    });
+
+    neonEffectSelect.addEventListener("change", () => {
+      const img = imagePreview.querySelector("img");
+      if (img) {
+        img.className = '';
+        img.classList.add(`neon-${neonEffectSelect.value}`);
+      }
+    });
+
+    frameSelect.addEventListener("change", updateImageDisplay);
+
+    // Mover imagen
+    imageContainer.addEventListener("mousedown", startDrag);
+    imageContainer.addEventListener("touchstart", startDrag, { passive: false });
+
+    function startDrag(e) {
+      e.preventDefault();
+      isDragging = true;
+      const rect = imageContainer.getBoundingClientRect();
+      initialX = rect.left;
+      initialY = rect.top;
+      startX = e.clientX || e.touches[0].clientX;
+      startY = e.clientY || e.touches[0].clientY;
+    }
+
+    document.addEventListener("mousemove", drag);
+    document.addEventListener("touchmove", drag, { passive: false });
+
+    document.addEventListener("mouseup", endDrag);
+    document.addEventListener("touchend", endDrag);
+
+    function drag(e) {
+      if (!isDragging) return;
+      e.preventDefault();
+      
+      const x = (e.clientX || e.touches[0].clientX) - startX;
+      const y = (e.clientY || e.touches[0].clientY) - startY;
+      
+      imageContainer.style.left = `${initialX + x}px`;
+      imageContainer.style.top = `${initialY + y}px`;
+    }
+
+    function endDrag() {
+      isDragging = false;
+    }
+
+    // Descargar imagen (CON FONDO NEGRO)
+    downloadBtn.addEventListener("click", () => {
+      if (!currentImage) {
+        alert("¡Sube una foto primero!");
+        return;
+      }
+
+      const tempCanvas = document.createElement("canvas");
+      tempCanvas.width = canvas.width;
+      tempCanvas.height = canvas.height;
+      const tempCtx = tempCanvas.getContext("2d");
+      
+      // Fondo negro
+      tempCtx.fillStyle = 'black';
+      tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+      
+      // Dibujar matrix
+      tempCtx.drawImage(canvas, 0, 0);
+      
+      // Dibujar marco e imagen
+      const containerRect = imageContainer.getBoundingClientRect();
+      const img = imagePreview.querySelector("img");
+      
+      if (img) {
+        // Marco
+        if (frameSelect.value === 'polaroid') {
+          tempCtx.fillStyle = 'white';
+          tempCtx.fillRect(containerRect.left, containerRect.top, containerRect.width, containerRect.height);
+          tempCtx.fillStyle = '#eee';
+          tempCtx.fillRect(
+            containerRect.left + containerRect.width * 0.1,
+            containerRect.top + containerRect.height - 30,
+            containerRect.width * 0.8,
+            2
+          );
+        }
+        
+        // Imagen con efectos
+        tempCtx.save();
+        tempCtx.filter = window.getComputedStyle(img).filter;
+        tempCtx.drawImage(
+          img,
+          containerRect.left + (containerRect.width - img.offsetWidth) / 2,
+          containerRect.top + (containerRect.height - img.offsetHeight) / 2,
+          img.offsetWidth,
+          img.offsetHeight
+        );
+        tempCtx.restore();
+      }
+      
+      // Descargar
+      tempCanvas.toBlob(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "fondo-personalizado.png";
+        a.click();
+        URL.revokeObjectURL(url);
+      }, "image/png");
+    });
+
+    // ===== MÚSICA =====
+    const musicBtn = document.getElementById("music-btn");
+    const bgMusic = document.getElementById("bg-music");
+    bgMusic.volume = 0.3;
+
+    // Control de música
+    musicBtn.addEventListener("click", () => {
+      if (bgMusic.paused) {
+        bgMusic.play();
+        musicBtn.textContent = "🔊";
+      } else {
+        bgMusic.pause();
+        musicBtn.textContent = "🔇";
+      }
+    });
+
+    // Iniciar música después de interacción
+    document.body.addEventListener("click", () => {
+      bgMusic.play().catch(e => console.log("Auto-play bloqueado:", e));
+    }, { once: true });
+
+    // Posición inicial de la imagen
+    imageContainer.style.left = `${window.innerWidth / 2 - 125}px`;
+    imageContainer.style.top = `${window.innerHeight / 2 - 175}px`;
+
+    // Redimensionar
+    window.addEventListener("resize", resizeCanvas);
+  </script>
+</body>
+</html>
